@@ -1,0 +1,11 @@
+/Users/kaanbitgin/Documents/KOÇSİSTEM/Kaan.AI/KaanAI.Application/bin/Debug/net9.0/KaanAI.Application.deps.json
+/Users/kaanbitgin/Documents/KOÇSİSTEM/Kaan.AI/KaanAI.Application/bin/Debug/net9.0/KaanAI.Application.dll
+/Users/kaanbitgin/Documents/KOÇSİSTEM/Kaan.AI/KaanAI.Application/bin/Debug/net9.0/KaanAI.Application.pdb
+/Users/kaanbitgin/Documents/KOÇSİSTEM/Kaan.AI/KaanAI.Application/obj/Debug/net9.0/KaanAI.Application.GeneratedMSBuildEditorConfig.editorconfig
+/Users/kaanbitgin/Documents/KOÇSİSTEM/Kaan.AI/KaanAI.Application/obj/Debug/net9.0/KaanAI.Application.AssemblyInfoInputs.cache
+/Users/kaanbitgin/Documents/KOÇSİSTEM/Kaan.AI/KaanAI.Application/obj/Debug/net9.0/KaanAI.Application.AssemblyInfo.cs
+/Users/kaanbitgin/Documents/KOÇSİSTEM/Kaan.AI/KaanAI.Application/obj/Debug/net9.0/KaanAI.Application.csproj.CoreCompileInputs.cache
+/Users/kaanbitgin/Documents/KOÇSİSTEM/Kaan.AI/KaanAI.Application/obj/Debug/net9.0/KaanAI.Application.dll
+/Users/kaanbitgin/Documents/KOÇSİSTEM/Kaan.AI/KaanAI.Application/obj/Debug/net9.0/refint/KaanAI.Application.dll
+/Users/kaanbitgin/Documents/KOÇSİSTEM/Kaan.AI/KaanAI.Application/obj/Debug/net9.0/KaanAI.Application.pdb
+/Users/kaanbitgin/Documents/KOÇSİSTEM/Kaan.AI/KaanAI.Application/obj/Debug/net9.0/ref/KaanAI.Application.dll

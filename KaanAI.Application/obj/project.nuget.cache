@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "B5ctZ3qotfY=",
+  "success": true,
+  "projectFilePath": "/Users/kaanbitgin/Documents/KOÇSİSTEM/Kaan.AI/KaanAI.Application/KaanAI.Application.csproj",
+  "expectedPackageFiles": [
+    "/Users/kaanbitgin/.nuget/packages/microsoft.aspnetcore.http.abstractions/2.3.0/microsoft.aspnetcore.http.abstractions.2.3.0.nupkg.sha512",
+    "/Users/kaanbitgin/.nuget/packages/microsoft.aspnetcore.http.features/2.3.0/microsoft.aspnetcore.http.features.2.3.0.nupkg.sha512",
+    "/Users/kaanbitgin/.nuget/packages/microsoft.extensions.primitives/8.0.0/microsoft.extensions.primitives.8.0.0.nupkg.sha512",
+    "/Users/kaanbitgin/.nuget/packages/system.text.encodings.web/8.0.0/system.text.encodings.web.8.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
