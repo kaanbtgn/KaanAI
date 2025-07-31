@@ -1,6 +1,7 @@
 using KaanAI.Application.Abstraction;
 using KaanAI.Application.Abstraction.Chat;
 using KaanAI.Application;
+using KaanAI.Application.Extensions;
 using KaanAI.Persistence;
 using KaanAI.Persistence.Context.Main;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +27,7 @@ public class Program
 
         // Register Services
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-        builder.Services.AddScoped<IChatService, ChatService>();
+        builder.Services.AddApplicationServices();
 
         var app = builder.Build();
 
