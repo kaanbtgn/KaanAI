@@ -1,5 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36202.13 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Application", "Application", "{803847B8-F41B-4B76-8832-20C68C92F9DB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Domain", "Domain", "{0E1AEB7A-C403-4D34-9532-787507899C40}"
@@ -12,20 +15,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KaanAI.Domain", "KaanAI.Dom
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KaanAI.API", "KaanAI.API\KaanAI.API.csproj", "{457A441D-F07F-4040-937A-BEF44A376379}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KaanAI.Persistance", "KaanAI.Persistance\KaanAI.Persistance.csproj", "{192137E9-4AD4-4CC4-9666-A2A4D3E1DF3D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KaanAI.Persistence", "KaanAI.Persistence\KaanAI.Persistence.csproj", "{192137E9-4AD4-4CC4-9666-A2A4D3E1DF3D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KaanAI.Application", "KaanAI.Application\KaanAI.Application.csproj", "{AC97EB9A-357E-4CE2-9242-D89565E96B0C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KaanAI.Application.Abstraction", "KaanAI.Application.Abstraction\KaanAI.Application.Abstraction.csproj", "{53B6C91E-6941-407C-BA4D-27EA4FF81DE1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{4F6D1FC5-B8B6-4A89-B035-713B967F7C0D} = {0E1AEB7A-C403-4D34-9532-787507899C40}
-		{457A441D-F07F-4040-937A-BEF44A376379} = {6922DCCF-066D-4A64-93EF-402B75C19216}
-		{192137E9-4AD4-4CC4-9666-A2A4D3E1DF3D} = {0300C478-3E20-43CC-84F6-88EAAF04CFDC}
-		{AC97EB9A-357E-4CE2-9242-D89565E96B0C} = {803847B8-F41B-4B76-8832-20C68C92F9DB}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{4F6D1FC5-B8B6-4A89-B035-713B967F7C0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -44,5 +43,22 @@ Global
 		{AC97EB9A-357E-4CE2-9242-D89565E96B0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC97EB9A-357E-4CE2-9242-D89565E96B0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC97EB9A-357E-4CE2-9242-D89565E96B0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53B6C91E-6941-407C-BA4D-27EA4FF81DE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53B6C91E-6941-407C-BA4D-27EA4FF81DE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53B6C91E-6941-407C-BA4D-27EA4FF81DE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53B6C91E-6941-407C-BA4D-27EA4FF81DE1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4F6D1FC5-B8B6-4A89-B035-713B967F7C0D} = {0E1AEB7A-C403-4D34-9532-787507899C40}
+		{457A441D-F07F-4040-937A-BEF44A376379} = {6922DCCF-066D-4A64-93EF-402B75C19216}
+		{192137E9-4AD4-4CC4-9666-A2A4D3E1DF3D} = {0300C478-3E20-43CC-84F6-88EAAF04CFDC}
+		{AC97EB9A-357E-4CE2-9242-D89565E96B0C} = {803847B8-F41B-4B76-8832-20C68C92F9DB}
+		{53B6C91E-6941-407C-BA4D-27EA4FF81DE1} = {803847B8-F41B-4B76-8832-20C68C92F9DB}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BA18F01D-94D1-42C0-8E81-25FFA5F4B89D}
 	EndGlobalSection
 EndGlobal
