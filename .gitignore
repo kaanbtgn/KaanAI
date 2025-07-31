@@ -253,3 +253,4 @@ __pycache__/
 coverage-hits.txt
 coverage.json
 coverage-html/
+/KaanAI.API/appsettings.Development.json
