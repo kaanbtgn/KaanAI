@@ -1,6 +1,4 @@
 using KaanAI.Application.Abstraction;
-using KaanAI.Application.Abstraction.Chat;
-using KaanAI.Application;
 using KaanAI.Application.Extensions;
 using KaanAI.Persistence;
 using KaanAI.Persistence.Context.Main;

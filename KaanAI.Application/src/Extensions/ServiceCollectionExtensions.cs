@@ -1,4 +1,5 @@
 using KaanAI.Application.Abstraction;
+using KaanAI.Application.Abstraction.Chat;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
@@ -19,6 +20,8 @@ public static class ServiceCollectionExtensions
                 .Where(type => !type.IsAbstract && !type.IsInterface && typeof(IService).IsAssignableFrom(type))
                 .ToList();
 
+            var registeredServices = new List<string>();
+
             foreach (var serviceType in serviceTypes)
             {
                 // Find the interface that this service implements (should be the one that extends IService)
@@ -31,14 +34,23 @@ public static class ServiceCollectionExtensions
                 {
                     // Register the service with its interface
                     services.AddScoped(serviceInterface, serviceType);
-                    
-                    // Log the registration (optional, for debugging)
-                    Console.WriteLine($"Registered service: {serviceInterface.Name} -> {serviceType.Name}");
+                    registeredServices.Add($"{serviceInterface.Name} -> {serviceType.Name}");
                 }
                 else
                 {
                     Console.WriteLine($"Warning: Service {serviceType.Name} implements IService but no specific interface found");
                 }
+            }
+
+            // Log all registered services
+            if (registeredServices.Any())
+            {
+                Console.WriteLine("=== Application Services Registered ===");
+                foreach (var service in registeredServices)
+                {
+                    Console.WriteLine($"✓ {service}");
+                }
+                Console.WriteLine("=======================================");
             }
 
             return services;
@@ -47,6 +59,29 @@ public static class ServiceCollectionExtensions
         {
             Console.WriteLine($"Error during service registration: {ex.Message}");
             throw;
+        }
+    }
+
+    public static void VerifyServiceRegistration(this IServiceCollection services)
+    {
+        var serviceProvider = services.BuildServiceProvider();
+        
+        try
+        {
+            // Try to resolve IChatService to verify registration
+            var chatService = serviceProvider.GetService<IChatService>();
+            if (chatService != null)
+            {
+                Console.WriteLine("✓ IChatService successfully registered and resolved");
+            }
+            else
+            {
+                Console.WriteLine("✗ IChatService not found in service collection");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"✗ Error resolving IChatService: {ex.Message}");
         }
     }
 } 
