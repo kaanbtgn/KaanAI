@@ -26,7 +26,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\KaanAI.Application\KaanAI.Application.csproj" />
-      <ProjectReference Include="..\KaanAI.Persistance\KaanAI.Persistance.csproj" />
+      <ProjectReference Include="..\KaanAI.Application.Abstraction\KaanAI.Application.Abstraction.csproj" />
+      <ProjectReference Include="..\KaanAI.Persistence\KaanAI.Persistence.csproj" />
     </ItemGroup>
 
     <ItemGroup>

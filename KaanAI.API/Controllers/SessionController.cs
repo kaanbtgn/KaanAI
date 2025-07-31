@@ -1,24 +1,36 @@
+using KaanAI.Application.Abstraction.Chat.Contracts;
+using KaanAI.Application.Abstraction.Chat;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KaanAI.API.Controllers;
+
 [ApiController]
-[Route("[controller]")]
-public class SessionController : Controller
+[Route("api/[controller]")]
+public class SessionController : ControllerBase
 {
+    private readonly IChatService _chatService;
     private readonly ILogger<SessionController> _logger;
     private readonly IConfiguration _configuration;
-    
 
-    public SessionController(ILogger<SessionController> logger, IConfiguration configuration)
+    public SessionController(IChatService chatService, ILogger<SessionController> logger, IConfiguration configuration)
     {
+        _chatService = chatService;
         _logger = logger;
         _configuration = configuration;
-        var a = _configuration?["Services;AI:OpenAI:EndPoint"];
     }
 
     [HttpPost]
-    public IActionResult CreateSession()
+    public async Task<ActionResult<ChatSessionDto>> CreateSession([FromBody] CreateSessionRequest request)
     {
-        return Ok();
+        try
+        {
+            var session = await _chatService.CreateSessionAsync(request.CreatedBy);
+            return Ok(session);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating session");
+            return StatusCode(500, "An error occurred while creating the session");
+        }
     }
 }

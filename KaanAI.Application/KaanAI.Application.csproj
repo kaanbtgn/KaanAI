@@ -7,11 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="src\Services\" />
+      <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+      <ProjectReference Include="..\KaanAI.Application.Abstraction\KaanAI.Application.Abstraction.csproj" />
+      <ProjectReference Include="..\KaanAI.Persistence\KaanAI.Persistence.csproj" />
     </ItemGroup>
 
 </Project>

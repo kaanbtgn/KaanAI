@@ -1,14 +1,11 @@
-using KaanAI.Application.Services;
-using KaanAI.Application.Services.CreateSession;
-using KaanAI.Application.Services.SessionHistory;
-using KaanAI.Application.Services.UpdateSession;
-using KaanAI.Domain.Entities;
-using KaanAI.Domain.Repositories;
-using KaanAI.Persistance.Context.Main;
-using KaanAI.Persistance.Data;
+using KaanAI.Application.Abstraction;
+using KaanAI.Application.Extensions;
+using KaanAI.Persistence;
+using KaanAI.Persistence.Context.Main;
 using Microsoft.EntityFrameworkCore;
 
 namespace KaanAI.API;
+
 public class Program
 {
     public static void Main(string[] args)
@@ -16,18 +13,19 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
-
         builder.Services.AddControllers();
+        
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
-        builder.Services.AddDbContext<MainDbContext>(opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-        builder.Services.AddScoped<IUnitOfWork,UnitOfWork>();
-        builder.Services.AddScoped<CreateSessionService>();
-        builder.Services.AddScoped<UpdateSessionService>();
-        builder.Services.AddScoped<SessionHistoryService>();
+        
+        // Database Context
+        builder.Services
+            .AddDbContext<MainDbContext>(opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// MVC - Swagger
+        // Register Services
+        builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+        builder.Services.AddApplicationServices();
 
         var app = builder.Build();
 
@@ -39,10 +37,7 @@ public class Program
         }
 
         app.UseHttpsRedirection();
-
         app.UseAuthorization();
-
-
         app.MapControllers();
 
         app.Run();
