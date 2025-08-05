@@ -10,4 +10,9 @@ public class Answer
     public virtual ChatSession Session { get; set; } = null!;
 
     public int SessionId { get; set; }
+    
+    // Token usage tracking
+    public int PromptTokens { get; set; } = 0;        // Input tokens used
+    public int CompletionTokens { get; set; } = 0;    // Output tokens generated  
+    public int TotalTokens { get; set; } = 0;         // Total tokens for this response
 }

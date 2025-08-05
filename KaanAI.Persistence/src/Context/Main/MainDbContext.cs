@@ -43,6 +43,9 @@ public class MainDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.AnswerText).IsRequired().HasMaxLength(8000); // Increased from 4000 to 8000
             entity.Property(e => e.AnsweredAt).IsRequired();
+            entity.Property(e => e.PromptTokens).HasDefaultValue(0);
+            entity.Property(e => e.CompletionTokens).HasDefaultValue(0);
+            entity.Property(e => e.TotalTokens).HasDefaultValue(0);
             entity.HasOne(e => e.Session)
                   .WithMany(s => s.Answers)
                   .HasForeignKey(e => e.SessionId)

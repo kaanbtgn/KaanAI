@@ -9,6 +9,7 @@ public interface IChatService : IService
     Task<IEnumerable<ChatSessionDto>> GetAllSessionsAsync();
     Task<ChatMessageDto> AddQuestionAsync(int sessionId, string content);
     Task<ChatMessageDto> AddAnswerAsync(int sessionId, string answerText);
+    Task<ChatMessageDto> AddAnswerAsync(int sessionId, string answerText, int promptTokens, int completionTokens, int totalTokens);
     Task<IEnumerable<ChatMessageDto>> GetSessionQuestionsAsync(int sessionId);
     Task<IEnumerable<ChatMessageDto>> GetSessionAnswersAsync(int sessionId);
 } 

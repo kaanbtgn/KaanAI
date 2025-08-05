@@ -157,6 +157,11 @@ public class ChatService : IChatService
 
     public async Task<ChatMessageDto> AddAnswerAsync(int sessionId, string answerText)
     {
+        return await AddAnswerAsync(sessionId, answerText, 0, 0, 0);
+    }
+
+    public async Task<ChatMessageDto> AddAnswerAsync(int sessionId, string answerText, int promptTokens, int completionTokens, int totalTokens)
+    {
         var session = await _unitOfWork.Repository<ChatSession>().GetByIdAsync(sessionId);
         if (session == null)
             throw new ArgumentException($"Session with ID {sessionId} not found");
@@ -165,7 +170,10 @@ public class ChatService : IChatService
         {
             AnswerText = answerText,
             AnsweredAt = DateTime.UtcNow,
-            SessionId = sessionId
+            SessionId = sessionId,
+            PromptTokens = promptTokens,
+            CompletionTokens = completionTokens,
+            TotalTokens = totalTokens
         };
 
         await _unitOfWork.Repository<Answer>().AddAsync(answer);

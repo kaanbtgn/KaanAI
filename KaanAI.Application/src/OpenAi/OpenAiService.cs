@@ -77,13 +77,13 @@ public class OpenAiService : IOpenAiService
             // Add the question to the session
             await _chatService.AddQuestionAsync(sessionId, request.Message);
 
-            // Prepare messages for OpenAI
+            // Prepare messages for OpenAI with default system message
             var messages = new List<ChatMessage>
             {
-                new SystemChatMessage(request.SystemMessage ?? "Sen yardımcı bir AI asistanısın. Kullanıcıların sorularını net ve anlaşılır bir şekilde yanıtla.")
+                new SystemChatMessage("Sen yardımcı bir Türkçe AI asistanısın. Kullanıcıların sorularını net ve anlaşılır bir şekilde yanıtla.")
             };
 
-            // Include conversation history if requested
+            // Include conversation history based on request parameter
             if (request.IncludeHistory)
             {
                 try
@@ -116,11 +116,27 @@ public class OpenAiService : IOpenAiService
 
             var chatCompletionOptions = new ChatCompletionOptions()
             {
-                Temperature = request.Temperature ?? 0.7f,
-                MaxOutputTokenCount = request.MaxTokens ?? 1000
+                Temperature = 0.7f // Default temperature - let Azure OpenAI handle max tokens
             };
             
+            _logger.LogInformation("Using default temperature: {Temperature}", 
+                chatCompletionOptions.Temperature);
+            
             _logger.LogInformation("Sending request to Azure OpenAI with {MessageCount} messages", messages.Count);
+            
+            // Log the messages being sent for debugging
+            for (int i = 0; i < messages.Count; i++)
+            {
+                var msg = messages[i];
+                var content = msg switch
+                {
+                    SystemChatMessage systemMsg => $"SYSTEM: {systemMsg.Content[0].Text}",
+                    UserChatMessage userMsg => $"USER: {userMsg.Content[0].Text}",
+                    AssistantChatMessage assistantMsg => $"ASSISTANT: {assistantMsg.Content[0].Text}",
+                    _ => $"OTHER: {msg.GetType().Name}"
+                };
+                _logger.LogInformation("Message {Index}: {Content}", i, content.Length > 100 ? content.Substring(0, 100) + "..." : content);
+            }
             
             // Create a custom cancellation token with longer timeout
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -128,17 +144,51 @@ public class OpenAiService : IOpenAiService
             
             var response = await _chatClient.CompleteChatAsync(messages, chatCompletionOptions, cts.Token);
             var chatResponse = response.Value;
-            var aiResponseText = chatResponse.Content[0].Text;
+            
+            _logger.LogInformation("Raw response received from Azure OpenAI");
+            _logger.LogInformation("Response content count: {Count}", chatResponse.Content?.Count ?? 0);
+            
+            // Log token usage information
+            if (chatResponse.Usage != null)
+            {
+                _logger.LogInformation("Token usage - Prompt: {PromptTokens}, Completion: {CompletionTokens}, Total: {TotalTokens}", 
+                    chatResponse.Usage.InputTokenCount, 
+                    chatResponse.Usage.OutputTokenCount, 
+                    chatResponse.Usage.TotalTokenCount);
+            }
+            else
+            {
+                _logger.LogWarning("No token usage information available in response");
+            }
+            
+            if (chatResponse.Content == null || chatResponse.Content.Count == 0)
+            {
+                throw new InvalidOperationException("No content received from Azure OpenAI");
+            }
+            
+            var aiResponseText = chatResponse.Content[0].Text ?? string.Empty;
+            
+            _logger.LogInformation("Extracted response text length: {Length}", aiResponseText.Length);
+            _logger.LogInformation("First 100 chars of response: {Preview}", 
+                aiResponseText.Length > 100 ? aiResponseText.Substring(0, 100) : aiResponseText);
 
-            // Add the AI response to the session
-            await _chatService.AddAnswerAsync(sessionId, aiResponseText);
+            // Extract token usage information
+            var promptTokens = chatResponse.Usage?.InputTokenCount ?? 0;
+            var completionTokens = chatResponse.Usage?.OutputTokenCount ?? 0;
+            var totalTokens = chatResponse.Usage?.TotalTokenCount ?? 0;
+
+            // Add the AI response to the session with token information
+            await _chatService.AddAnswerAsync(sessionId, aiResponseText, promptTokens, completionTokens, totalTokens);
+
+            // Extract token usage information
+            var tokensUsed = totalTokens;
 
             var result = new OpenAiResponseDto
             {
                 Response = aiResponseText,
                 SessionId = sessionId.ToString(),
                 IsSuccess = true,
-                TokensUsed = 0, // TODO: Find correct property for token usage
+                TokensUsed = tokensUsed,
                 Model = _deploymentName,
                 CreatedAt = DateTime.UtcNow
             };
@@ -162,18 +212,7 @@ public class OpenAiService : IOpenAiService
 
     public async Task<OpenAiResponseDto> SendMessageWithHistoryAsync(SendMessageDto request, CancellationToken cancellationToken = default)
     {
-        // Since SendMessageAsync now handles history by default, we can just call it
-        // But ensure IncludeHistory is set to true
-        var requestWithHistory = new SendMessageDto
-        {
-            Message = request.Message,
-            SessionId = request.SessionId,
-            MaxTokens = request.MaxTokens,
-            Temperature = request.Temperature,
-            SystemMessage = request.SystemMessage,
-            IncludeHistory = true
-        };
-
-        return await SendMessageAsync(requestWithHistory, cancellationToken);
+        // Since we always include history now, just call the main method
+        return await SendMessageAsync(request, cancellationToken);
     }
 }

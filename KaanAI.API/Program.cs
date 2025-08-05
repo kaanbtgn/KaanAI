@@ -55,7 +55,8 @@ public class Program
             app.UseCors("DevelopmentPolicy");
         }
 
-        app.UseHttpsRedirection();
+        // Skip HTTPS redirection for development to avoid warnings
+        // app.UseHttpsRedirection();
 
         app.UseAuthorization();
 
