@@ -254,3 +254,10 @@ coverage-hits.txt
 coverage.json
 coverage-html/
 /KaanAI.API/appsettings.Development.json
+
+# Environment variables and sensitive data
+.env
+.env.local
+.env.development
+.env.production
+*.env

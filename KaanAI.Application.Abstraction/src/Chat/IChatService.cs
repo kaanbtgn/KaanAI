@@ -1,12 +1,12 @@
 using KaanAI.Application.Abstraction.Chat.Contracts;
-
-namespace KaanAI.Application.Abstraction.Chat;
+namespace KaanAI.Application.Abstraction;
 
 public interface IChatService : IService
 {
-    Task<ChatSessionDto> CreateSessionAsync(string createdBy);
+    Task<ChatSessionDto> CreateSessionAsync(string? createdBy = null);
+    Task<ChatSessionDto> GetOrCreateCurrentSessionAsync();
     Task<ChatSessionDetailDto?> GetSessionAsync(int sessionId);
-    Task<IEnumerable<ChatSessionDto>> GetSessionsByUserAsync(string userId);
+    Task<IEnumerable<ChatSessionDto>> GetAllSessionsAsync();
     Task<ChatMessageDto> AddQuestionAsync(int sessionId, string content);
     Task<ChatMessageDto> AddAnswerAsync(int sessionId, string answerText);
     Task<IEnumerable<ChatMessageDto>> GetSessionQuestionsAsync(int sessionId);

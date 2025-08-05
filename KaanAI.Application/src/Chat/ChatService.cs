@@ -8,19 +8,20 @@ namespace KaanAI.Application;
 public class ChatService : IChatService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private const string DEFAULT_USER = "system_user";
 
     public ChatService(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<ChatSessionDto> CreateSessionAsync(string createdBy)
+    public async Task<ChatSessionDto> CreateSessionAsync(string? createdBy = null)
     {
         var session = new ChatSession
         {
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
-            CreatedBy = createdBy,
+            CreatedBy = createdBy ?? DEFAULT_USER,
             Questions = new List<Question>(),
             Answers = new List<Answer>()
         };
@@ -75,19 +76,53 @@ public class ChatService : IChatService
         };
     }
 
-    public async Task<IEnumerable<ChatSessionDto>> GetSessionsByUserAsync(string userId)
+    public async Task<ChatSessionDto> GetOrCreateCurrentSessionAsync()
     {
-        var sessions = await _unitOfWork.Repository<ChatSession>().FindAsync(s => s.CreatedBy == userId);
+        // For single user system, always get the most recent session or create new one
+        var sessions = await _unitOfWork.Repository<ChatSession>().FindAsync(s => s.CreatedBy == DEFAULT_USER);
+        var latestSession = sessions.OrderByDescending(s => s.UpdatedAt).FirstOrDefault();
         
-        return sessions.Select(s => new ChatSessionDto
+        if (latestSession != null)
         {
-            Id = s.Id,
-            CreatedAt = s.CreatedAt,
-            CreatedBy = s.CreatedBy,
-            UpdatedAt = s.UpdatedAt,
-            QuestionCount = s.Questions?.Count ?? 0,
-            AnswerCount = s.Answers?.Count ?? 0
-        });
+            return new ChatSessionDto
+            {
+                Id = latestSession.Id,
+                CreatedAt = latestSession.CreatedAt,
+                CreatedBy = latestSession.CreatedBy,
+                UpdatedAt = latestSession.UpdatedAt,
+                QuestionCount = latestSession.Questions?.Count ?? 0,
+                AnswerCount = latestSession.Answers?.Count ?? 0
+            };
+        }
+        
+        // No session exists, create a new one
+        return await CreateSessionAsync();
+    }
+
+    public async Task<IEnumerable<ChatSessionDto>> GetAllSessionsAsync()
+    {
+        // Get sessions with their questions and answers count directly from database
+        var sessions = await _unitOfWork.Repository<ChatSession>().GetAllAsync();
+        var result = new List<ChatSessionDto>();
+        
+        foreach (var session in sessions.Where(s => s.CreatedBy == DEFAULT_USER))
+        {
+            // Get actual counts from database
+            var questions = await _unitOfWork.Repository<Question>().FindAsync(q => q.SessionId == session.Id);
+            var answers = await _unitOfWork.Repository<Answer>().FindAsync(a => a.SessionId == session.Id);
+            
+            result.Add(new ChatSessionDto
+            {
+                Id = session.Id,
+                CreatedAt = session.CreatedAt,
+                CreatedBy = session.CreatedBy,
+                UpdatedAt = session.UpdatedAt,
+                QuestionCount = questions.Count(),
+                AnswerCount = answers.Count()
+            });
+        }
+        
+        return result.OrderByDescending(s => s.UpdatedAt);
     }
 
     public async Task<ChatMessageDto> AddQuestionAsync(int sessionId, string content)

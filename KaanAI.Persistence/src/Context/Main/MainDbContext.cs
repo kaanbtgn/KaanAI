@@ -41,7 +41,7 @@ public class MainDbContext : DbContext
         modelBuilder.Entity<Answer>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.AnswerText).IsRequired().HasMaxLength(4000);
+            entity.Property(e => e.AnswerText).IsRequired().HasMaxLength(8000); // Increased from 4000 to 8000
             entity.Property(e => e.AnsweredAt).IsRequired();
             entity.HasOne(e => e.Session)
                   .WithMany(s => s.Answers)

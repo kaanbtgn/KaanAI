@@ -3,6 +3,7 @@ using KaanAI.Application.Abstraction.Chat;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
+using KaanAI.Application.Abstraction.OpenAi;
 
 namespace KaanAI.Application.Extensions;
 
@@ -78,10 +79,21 @@ public static class ServiceCollectionExtensions
             {
                 Console.WriteLine("✗ IChatService not found in service collection");
             }
+            
+            // Try to resolve IOpenAI to verify registration
+            var openAIService = serviceProvider.GetService<IOpenAiService>();
+            if (openAIService != null)
+            {
+                Console.WriteLine("✓ IOpenAI successfully registered and resolved");
+            }
+            else
+            {
+                Console.WriteLine("✗ IOpenAI not found in service collection");
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"✗ Error resolving IChatService: {ex.Message}");
+            Console.WriteLine($"✗ Error resolving services: {ex.Message}");
         }
     }
 } 
