@@ -1,4 +1,4 @@
-﻿using KaanAI.Application.Abstraction.Chat;
+﻿using KaanAI.Application.Abstraction;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 

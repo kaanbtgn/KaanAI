@@ -15,9 +15,27 @@ public class Program
         // Add services to the container.
         builder.Services.AddControllers();
         
+        // Add CORS for development
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("DevelopmentPolicy",
+                policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+        });
+        
         // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        
+        // Configure HttpClient with better timeout settings
+        builder.Services.AddHttpClient("AzureOpenAI", client =>
+        {
+            client.Timeout = TimeSpan.FromMinutes(5); // 5 minutes timeout
+        });
         
         // Database Context
         builder.Services
@@ -34,10 +52,13 @@ public class Program
         {
             app.UseSwagger();
             app.UseSwaggerUI();
+            app.UseCors("DevelopmentPolicy");
         }
 
         app.UseHttpsRedirection();
+
         app.UseAuthorization();
+
         app.MapControllers();
 
         app.Run();

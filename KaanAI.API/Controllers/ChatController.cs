@@ -1,5 +1,5 @@
 using KaanAI.Application.Abstraction.Chat.Contracts;
-using KaanAI.Application.Abstraction.Chat;
+using KaanAI.Application.Abstraction;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KaanAI.API.Controllers;
@@ -18,11 +18,11 @@ public class ChatController : ControllerBase
     }
 
     [HttpPost("sessions")]
-    public async Task<ActionResult<ChatSessionDto>> CreateSession([FromBody] CreateSessionRequest request)
+    public async Task<ActionResult<ChatSessionDto>> CreateSession()
     {
         try
         {
-            var session = await _chatService.CreateSessionAsync(request.CreatedBy);
+            var session = await _chatService.CreateSessionAsync();
             return CreatedAtAction(nameof(GetSession), new { id = session.Id }, session);
         }
         catch (Exception ex)
@@ -50,18 +50,33 @@ public class ChatController : ControllerBase
         }
     }
 
-    [HttpGet("sessions/user/{userId}")]
-    public async Task<ActionResult<IEnumerable<ChatSessionDto>>> GetUserSessions(string userId)
+    [HttpGet("sessions")]
+    public async Task<ActionResult<IEnumerable<ChatSessionDto>>> GetAllSessions()
     {
         try
         {
-            var sessions = await _chatService.GetSessionsByUserAsync(userId);
+            var sessions = await _chatService.GetAllSessionsAsync();
             return Ok(sessions);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving sessions for user {UserId}", userId);
+            _logger.LogError(ex, "Error retrieving sessions");
             return StatusCode(500, "An error occurred while retrieving sessions");
+        }
+    }
+
+    [HttpGet("sessions/current")]
+    public async Task<ActionResult<ChatSessionDto>> GetOrCreateCurrentSession()
+    {
+        try
+        {
+            var session = await _chatService.GetOrCreateCurrentSessionAsync();
+            return Ok(session);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting or creating current session");
+            return StatusCode(500, "An error occurred while getting the current session");
         }
     }
 
