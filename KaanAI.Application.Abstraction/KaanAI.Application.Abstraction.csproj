@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="src/OpenWeatherMap/Contracts/" />
+    <Folder Include="src/SemanticKernel/Contracts/" />
     <Folder Include="src\Chat\Contracts\" />
   </ItemGroup>
 

@@ -1,10 +1,11 @@
 using Azure;
-using Azure.AI.OpenAI;
 using KaanAI.Application.Abstraction;
+using KaanAI.Application.Abstraction.Chat;
+using KaanAI.Application.Abstraction.OpenAi;
 using KaanAI.Application.Abstraction.OpenAi.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.ClientModel;
+using OpenAI;
 using OpenAI.Chat;
 
 namespace KaanAI.Application;
@@ -27,7 +28,7 @@ public class OpenAiService : IOpenAiService
                       Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT") ?? 
                       throw new ArgumentNullException("Azure OpenAI endpoint not configured");
                       
-        var apiKey = configuration["AzureOpenAI:APIKey"] ?? 
+        var apiKey = configuration["AzureOpenAI:ApiKey"] ?? 
                     Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY") ?? 
                     throw new ArgumentNullException("Azure OpenAI API key not configured");
                     
@@ -35,160 +36,100 @@ public class OpenAiService : IOpenAiService
                          Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME") ?? 
                          throw new ArgumentNullException("Azure OpenAI deployment name not configured");
         
-        var apiVersion = configuration["AzureOpenAI:ApiVersion"] ?? "2024-02-15-preview";
-        
-        _logger.LogInformation("Configuring Azure OpenAI client - Endpoint: {Endpoint}, Deployment: {DeploymentName}, ApiVersion: {ApiVersion}", 
-            endpoint, _deploymentName, apiVersion);
-        
-        try
+        var openAIClient = new OpenAIClient(new AzureKeyCredential(apiKey), new OpenAIClientOptions
         {
-            // Configure client options with longer timeout
-            var clientOptions = new AzureOpenAIClientOptions()
-            {
-                NetworkTimeout = TimeSpan.FromMinutes(5) // 5 minutes timeout
-            };
-            
-            var azureOpenAIClient = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey), clientOptions);
-            _chatClient = azureOpenAIClient.GetChatClient(_deploymentName);
-            
-            _logger.LogInformation("Azure OpenAI client configured successfully");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to configure Azure OpenAI client");
-            throw;
-        }
+            Endpoint = new Uri(endpoint)
+        });
+        
+        _chatClient = openAIClient.GetChatClient(_deploymentName);
     }
 
     public async Task<OpenAiResponseDto> SendMessageAsync(SendMessageDto request, CancellationToken cancellationToken = default)
     {
         try
         {
-            _logger.LogInformation("Starting OpenAI request with deployment: {DeploymentName}", _deploymentName);
-            
-            // Get or create current session if no sessionId provided
+            // 1. Get or create session automatically
             int sessionId;
-            if (string.IsNullOrEmpty(request.SessionId) || !int.TryParse(request.SessionId, out sessionId))
+            if (!string.IsNullOrEmpty(request.SessionId) && int.TryParse(request.SessionId, out sessionId))
             {
+                // Use provided session ID
+                var existingSession = await _chatService.GetSessionAsync(sessionId);
+                if (existingSession == null)
+                {
+                    // Session doesn't exist, create a new one
+                    var newSession = await _chatService.CreateSessionAsync();
+                    sessionId = newSession.Id;
+                    _logger.LogWarning("Provided session {ProvidedSessionId} not found, created new session {NewSessionId}", request.SessionId, sessionId);
+                }
+            }
+            else
+            {
+                // No session provided, get or create current session
                 var currentSession = await _chatService.GetOrCreateCurrentSessionAsync();
                 sessionId = currentSession.Id;
             }
 
-            // Add the question to the session
-            await _chatService.AddQuestionAsync(sessionId, request.Message);
-
-            // Prepare messages for OpenAI with default system message
+            // 2. Build messages including history if requested
             var messages = new List<ChatMessage>
             {
-                new SystemChatMessage("Sen yardımcı bir Türkçe AI asistanısın. Kullanıcıların sorularını net ve anlaşılır bir şekilde yanıtla.")
+                new SystemChatMessage("Sen yardımcı bir AI asistanısın. Kullanıcıların sorularını net ve anlaşılır bir şekilde yanıtla. Geçmiş konuşma bağlamını dikkate al.")
             };
 
-            // Include conversation history based on request parameter
+            // Include conversation history if requested
             if (request.IncludeHistory)
             {
                 try
                 {
-                    var sessionDetail = await _chatService.GetSessionAsync(sessionId);
-                    if (sessionDetail?.Messages != null)
+                    var questions = await _unitOfWork.Repository<Domain.Question>().FindAsync(q => q.SessionId == sessionId);
+                    var answers = await _unitOfWork.Repository<Domain.Answer>().FindAsync(a => a.SessionId == sessionId);
+                    
+                    var allHistory = new List<(DateTime timestamp, string content, string type)>();
+                    
+                    foreach (var q in questions)
+                        allHistory.Add((q.AskedAt, q.Content, "user"));
+                    
+                    foreach (var a in answers)
+                        allHistory.Add((a.AnsweredAt, a.AnswerText, "assistant"));
+                    
+                    foreach (var item in allHistory.OrderBy(x => x.timestamp))
                     {
-                        // Add all previous messages in chronological order (excluding the just-added question)
-                        var previousMessages = sessionDetail.Messages
-                            .Where(m => m.Content != request.Message || m.Timestamp < DateTime.UtcNow.AddSeconds(-1))
-                            .OrderBy(m => m.Timestamp);
-
-                        foreach (var msg in previousMessages)
-                        {
-                            if (msg.Type == "Question")
-                                messages.Add(new UserChatMessage(msg.Content));
-                            else if (msg.Type == "Answer")
-                                messages.Add(new AssistantChatMessage(msg.Content));
-                        }
+                        if (item.type == "user")
+                            messages.Add(new UserChatMessage(item.content));
+                        else
+                            messages.Add(new AssistantChatMessage(item.content));
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogWarning(ex, "Failed to load session history for session {SessionId}", sessionId);
+                    // Continue without history if loading fails
                 }
             }
 
-            // Add the current user message
+            // Add current message
             messages.Add(new UserChatMessage(request.Message));
 
+            // 3. Send to OpenAI
             var chatCompletionOptions = new ChatCompletionOptions()
             {
-                Temperature = 0.7f // Default temperature - let Azure OpenAI handle max tokens
+                Temperature = 0.7f
             };
             
-            _logger.LogInformation("Using default temperature: {Temperature}", 
-                chatCompletionOptions.Temperature);
-            
-            _logger.LogInformation("Sending request to Azure OpenAI with {MessageCount} messages", messages.Count);
-            
-            // Log the messages being sent for debugging
-            for (int i = 0; i < messages.Count; i++)
-            {
-                var msg = messages[i];
-                var content = msg switch
-                {
-                    SystemChatMessage systemMsg => $"SYSTEM: {systemMsg.Content[0].Text}",
-                    UserChatMessage userMsg => $"USER: {userMsg.Content[0].Text}",
-                    AssistantChatMessage assistantMsg => $"ASSISTANT: {assistantMsg.Content[0].Text}",
-                    _ => $"OTHER: {msg.GetType().Name}"
-                };
-                _logger.LogInformation("Message {Index}: {Content}", i, content.Length > 100 ? content.Substring(0, 100) + "..." : content);
-            }
-            
-            // Create a custom cancellation token with longer timeout
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            cts.CancelAfter(TimeSpan.FromMinutes(3)); // 3 minutes timeout
-            
-            var response = await _chatClient.CompleteChatAsync(messages, chatCompletionOptions, cts.Token);
+            var response = await _chatClient.CompleteChatAsync(messages, chatCompletionOptions, cancellationToken);
             var chatResponse = response.Value;
-            
-            _logger.LogInformation("Raw response received from Azure OpenAI");
-            _logger.LogInformation("Response content count: {Count}", chatResponse.Content?.Count ?? 0);
-            
-            // Log token usage information
-            if (chatResponse.Usage != null)
-            {
-                _logger.LogInformation("Token usage - Prompt: {PromptTokens}, Completion: {CompletionTokens}, Total: {TotalTokens}", 
-                    chatResponse.Usage.InputTokenCount, 
-                    chatResponse.Usage.OutputTokenCount, 
-                    chatResponse.Usage.TotalTokenCount);
-            }
-            else
-            {
-                _logger.LogWarning("No token usage information available in response");
-            }
-            
-            if (chatResponse.Content == null || chatResponse.Content.Count == 0)
-            {
-                throw new InvalidOperationException("No content received from Azure OpenAI");
-            }
-            
-            var aiResponseText = chatResponse.Content[0].Text ?? string.Empty;
-            
-            _logger.LogInformation("Extracted response text length: {Length}", aiResponseText.Length);
-            _logger.LogInformation("First 100 chars of response: {Preview}", 
-                aiResponseText.Length > 100 ? aiResponseText.Substring(0, 100) : aiResponseText);
 
-            // Extract token usage information
-            var promptTokens = chatResponse.Usage?.InputTokenCount ?? 0;
-            var completionTokens = chatResponse.Usage?.OutputTokenCount ?? 0;
-            var totalTokens = chatResponse.Usage?.TotalTokenCount ?? 0;
+            var aiResponseText = chatResponse.Content[0].Text;
 
-            // Add the AI response to the session with token information
-            await _chatService.AddAnswerAsync(sessionId, aiResponseText, promptTokens, completionTokens, totalTokens);
-
-            // Extract token usage information
-            var tokensUsed = totalTokens;
+            // 4. Save to database
+            await _chatService.AddQuestionAsync(sessionId, request.Message);
+            await _chatService.AddAnswerAsync(sessionId, aiResponseText);
 
             var result = new OpenAiResponseDto
             {
                 Response = aiResponseText,
                 SessionId = sessionId.ToString(),
                 IsSuccess = true,
-                TokensUsed = tokensUsed,
+                TokensUsed = 0, // TODO: Find correct property for token usage
                 Model = _deploymentName,
                 CreatedAt = DateTime.UtcNow
             };
@@ -199,10 +140,28 @@ public class OpenAiService : IOpenAiService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while sending message to OpenAI");
+            
+            // Try to get session ID for error response
+            var errorSessionId = "unknown";
+            if (!string.IsNullOrEmpty(request.SessionId))
+                errorSessionId = request.SessionId;
+            else
+            {
+                try
+                {
+                    var currentSession = await _chatService.GetOrCreateCurrentSessionAsync();
+                    errorSessionId = currentSession.Id.ToString();
+                }
+                catch
+                {
+                    // Ignore errors when getting session for error response
+                }
+            }
+            
             return new OpenAiResponseDto
             {
                 Response = string.Empty,
-                SessionId = request.SessionId ?? "0",
+                SessionId = errorSessionId,
                 IsSuccess = false,
                 ErrorMessage = ex.Message,
                 CreatedAt = DateTime.UtcNow
@@ -210,9 +169,5 @@ public class OpenAiService : IOpenAiService
         }
     }
 
-    public async Task<OpenAiResponseDto> SendMessageWithHistoryAsync(SendMessageDto request, CancellationToken cancellationToken = default)
-    {
-        // Since we always include history now, just call the main method
-        return await SendMessageAsync(request, cancellationToken);
-    }
+
 }

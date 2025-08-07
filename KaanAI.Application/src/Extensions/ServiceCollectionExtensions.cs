@@ -1,9 +1,7 @@
 using KaanAI.Application.Abstraction;
-using KaanAI.Application.Abstraction.Chat;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
-using KaanAI.Application.Abstraction.OpenAi;
 
 namespace KaanAI.Application.Extensions;
 

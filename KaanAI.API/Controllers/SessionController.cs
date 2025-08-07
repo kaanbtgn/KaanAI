@@ -6,6 +6,7 @@ namespace KaanAI.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[ApiExplorerSettings(IgnoreApi = true)] // Hide from Swagger - use /api/assistant/chat instead
 public class SessionController : ControllerBase
 {
     private readonly IChatService _chatService;

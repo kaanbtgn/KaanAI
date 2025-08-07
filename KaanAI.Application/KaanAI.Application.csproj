@@ -7,9 +7,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
+      <PackageReference Include="Azure.AI.OpenAI" Version="2.2.0-beta.5" />
       <PackageReference Include="AzureOpenAIConnector" Version="1.0.2" />
       <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+      <PackageReference Include="Microsoft.SemanticKernel" Version="1.61.0" />
+      <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.61.0" />
+      <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.61.0" />
+      <PackageReference Include="Microsoft.SemanticKernel.Plugins.Core" Version="1.61.0-preview" />
     </ItemGroup>
 
     <ItemGroup>

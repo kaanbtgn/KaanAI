@@ -1,8 +1,10 @@
 using KaanAI.Application.Abstraction;
 using KaanAI.Application.Extensions;
+using KaanAI.Application;
 using KaanAI.Persistence;
 using KaanAI.Persistence.Context.Main;
 using Microsoft.EntityFrameworkCore;
+using KaanAI.Application.Abstraction.OpenWeatherMap.Contracts;
 
 namespace KaanAI.API;
 
@@ -37,6 +39,18 @@ public class Program
             client.Timeout = TimeSpan.FromMinutes(5); // 5 minutes timeout
         });
         
+        // Configure OpenWeatherMap settings
+        builder.Services.Configure<OpenWeatherMapSettings>(
+            builder.Configuration.GetSection(OpenWeatherMapSettings.SectionName));
+        
+        // Register OpenWeatherMap HttpClient and Service
+        builder.Services.AddHttpClient<IOpenWeatherMapService, OpenWeatherMapService>(client =>
+        {
+            var baseUrl = builder.Configuration["OpenWeatherMap:BaseUrl"] ?? "https://api.openweathermap.org";
+            client.BaseAddress = new Uri($"{baseUrl}/data/2.5/");
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
+        
         // Database Context
         builder.Services
             .AddDbContext<MainDbContext>(opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -44,6 +58,9 @@ public class Program
         // Register Services
         builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
         builder.Services.AddApplicationServices();
+        
+        // Register Semantic Kernel Services
+        builder.Services.AddSemanticKernel(builder.Configuration);
 
         var app = builder.Build();
 
