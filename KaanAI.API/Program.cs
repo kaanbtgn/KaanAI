@@ -5,6 +5,7 @@ using KaanAI.Persistence;
 using KaanAI.Persistence.Context.Main;
 using Microsoft.EntityFrameworkCore;
 using KaanAI.Application.Abstraction.OpenWeatherMap.Contracts;
+using KaanAI.API.Middleware;
 
 namespace KaanAI.API;
 
@@ -65,6 +66,10 @@ public class Program
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
+        
+        // Global exception handling middleware (should be first!)
+        app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+        
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
