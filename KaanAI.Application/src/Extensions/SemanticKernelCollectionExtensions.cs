@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.ComponentModel;
 using KaanAI.Application.Plugins;
+using KaanAI.Application.Plugins.CurrencyPlugin;
 using KaanAI.Application.Abstraction.SemanticKernel;
 using KaanAI.Application.Abstraction;
 
@@ -36,10 +37,14 @@ public static class SemanticKernelCollectionExtensions
                 apiKey: apiKey,
                 apiVersion: configuration["AzureOpenAI:ApiVersion"] ?? "2024-06-01-preview");
 
-        // Note: WeatherPlugin is manually instantiated in SemanticKernelService to avoid circular dependency
+        // Add built-in plugins
+        services.AddScoped<WeatherPlugin>();
+        services.AddScoped<GreetingPlugin>();
+        services.AddScoped<CurrencyPlugin>();
+
         // Note: SemanticKernelService should be automatically registered by AddApplicationServices()
         // since it implements ISemanticKernelService which extends IService
-        
+
         return services;
     }
 }

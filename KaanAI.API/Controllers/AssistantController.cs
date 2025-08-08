@@ -67,24 +67,63 @@ public async Task<ActionResult> Chat([FromBody] SemanticKernelRequestDto request
             {
                 new
                 {
-                    name = "Weather",
+                    name = "CurrencyPlugin",
+                    description = "Get currency/crypto/forex prices, OHLC candles and quick analysis",
+                    examples = new[] 
+                    { 
+                        "BTC/EUR fiyatı nedir?", 
+                        "EUR/USD kaç?",
+                        "USD/TRY anlık fiyat",
+                        "BTC/EUR için 1 saatlik OHLC verisi",
+                        "DOGE/EUR price"
+                    }
+                },
+                new
+                {
+                    name = "WeatherPlugin",
                     description = "Get current weather and forecasts for any location",
                     examples = new[] 
                     { 
                         "What's the weather in Istanbul?", 
                         "İstanbul'da hava durumu nasıl?",
-                        "Weather forecast for Ankara"
+                        "Weather forecast for Ankara",
+                        "Bugün hava nasıl?"
                     }
                 },
+                new
+                {
+                    name = "GreetingPlugin",
+                    description = "Handle greetings, introductions, and show available capabilities",
+                    examples = new[] 
+                    { 
+                        "Merhaba",
+                        "Hello",
+                        "What can you do?",
+                        "Neler yapabilirsin?"
+                    }
+                }
             },
             features = new[]
             {
-                "Intelligent weather detection using LLM",
+                "Intelligent plugin detection using LLM",
                 "Multi-language support (Turkish & English)",
                 "Session management",
-                "Context-aware responses"
+                "Context-aware responses",
+                "Real-time crypto data via Binance API (free)",
+                "Weather data via OpenWeatherMap",
+                "AI-powered analysis via Azure OpenAI"
             },
-            version = "1.0.0"
+            supportedCryptos = new[]
+            {
+                "BTC", "ETH", "ADA", "DOGE", "LTC", "XRP", "BNB", "SOL", "MATIC", "AVAX"
+            },
+            endpoints = new
+            {
+                chat = "/api/Assistant/chat",
+                capabilities = "/api/Assistant/capabilities",
+                health = "/api/Assistant/health"
+            },
+            version = "2.0.0"
         };
 
         return Ok(capabilities);

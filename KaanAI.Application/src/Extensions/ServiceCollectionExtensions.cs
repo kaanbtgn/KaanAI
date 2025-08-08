@@ -19,6 +19,26 @@ public static class ServiceCollectionExtensions
                 .Where(type => !type.IsAbstract && !type.IsInterface && typeof(IService).IsAssignableFrom(type))
                 .ToList();
 
+            Console.WriteLine($"Found {serviceTypes.Count} service types in assembly {applicationAssembly.FullName}");
+            foreach (var type in serviceTypes)
+            {
+                Console.WriteLine($"- {type.FullName}");
+            }
+            
+            // Debug: List ALL types in the assembly to see what's available
+            var allTypes = applicationAssembly.GetTypes();
+            var semanticKernelTypes = allTypes.Where(t => t.Name.Contains("SemanticKernel")).ToList();
+            Console.WriteLine($"\nAll SemanticKernel-related types in assembly:");
+            foreach (var type in semanticKernelTypes)
+            {
+                Console.WriteLine($"- {type.FullName} (IsAbstract: {type.IsAbstract}, IsInterface: {type.IsInterface})");
+                if (!type.IsAbstract && !type.IsInterface)
+                {
+                    var interfaces = type.GetInterfaces().Select(i => i.Name);
+                    Console.WriteLine($"  Implements: {string.Join(", ", interfaces)}");
+                }
+            }
+
             var registeredServices = new List<string>();
 
             foreach (var serviceType in serviceTypes)

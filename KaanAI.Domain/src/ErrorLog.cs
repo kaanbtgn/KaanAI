@@ -8,8 +8,8 @@ public class ErrorLog
 
     public int SessionId { get; set; }
 
-    public string Message { get; set; }
+    public  required string Message { get; set; }
 
-    public string StackTrace { get; set; }
+    public required string StackTrace { get; set; } 
 
 }

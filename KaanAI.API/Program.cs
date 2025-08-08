@@ -5,6 +5,10 @@ using KaanAI.Persistence;
 using KaanAI.Persistence.Context.Main;
 using Microsoft.EntityFrameworkCore;
 using KaanAI.Application.Abstraction.OpenWeatherMap.Contracts;
+using KaanAI.Application.Abstraction.Currency;
+using KaanAI.Application.Abstraction.Currency.Contracts;
+using KaanAI.Application.Currency;
+ 
 using KaanAI.API.Middleware;
 
 namespace KaanAI.API;
@@ -44,6 +48,10 @@ public class Program
         builder.Services.Configure<OpenWeatherMapSettings>(
             builder.Configuration.GetSection(OpenWeatherMapSettings.SectionName));
         
+        // Twelve Data settings
+        builder.Services.Configure<TwelveDataSettings>(
+            builder.Configuration.GetSection(TwelveDataSettings.SectionName));
+        
         // Register OpenWeatherMap HttpClient and Service
         builder.Services.AddHttpClient<IOpenWeatherMapService, OpenWeatherMapService>(client =>
         {
@@ -51,6 +59,17 @@ public class Program
             client.BaseAddress = new Uri($"{baseUrl}/data/2.5/");
             client.Timeout = TimeSpan.FromSeconds(30);
         });
+
+        // Register Twelve Data HttpClient and CurrencyService
+        builder.Services.AddHttpClient("TwelveData", client =>
+        {
+            var baseUrl = builder.Configuration["TwelveData:BaseUrl"] ?? "https://api.twelvedata.com";
+            if (!baseUrl.EndsWith('/')) baseUrl += "/";
+            client.BaseAddress = new Uri(baseUrl);
+            var timeoutStr = builder.Configuration["TwelveData:TimeoutSeconds"];
+            client.Timeout = TimeSpan.FromSeconds(int.TryParse(timeoutStr, out var seconds) ? seconds : 15);
+        });
+        builder.Services.AddScoped<ICurrencyService, CurrencyService>();
         
         // Database Context
         builder.Services

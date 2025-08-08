@@ -1,7 +1,7 @@
 using Microsoft.SemanticKernel;
 using System.ComponentModel;
 
-namespace KaanAI.Application.Plugins.GreetingPlugin;
+namespace KaanAI.Application.Plugins;
 
 /// <summary>
 /// Greeting Plugin - Handles greetings and introductions to the AI assistant
