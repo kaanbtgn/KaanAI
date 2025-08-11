@@ -16,6 +16,7 @@ public class SemanticKernelService : ISemanticKernelService
     private readonly Kernel _kernel;
     private readonly IChatService _chatService;
     private readonly ILogger<SemanticKernelService> _logger;
+    private const int PromptLogPreviewChars = 500;
 
     // System prompt that instructs the LLM to decide which plugins to use
     private const string SystemPrompt = @"You are an intelligent AI assistant with access to various plugins. 
@@ -26,6 +27,7 @@ Available plugins:
 - GreetingPlugin: For greetings, introductions, and showing capabilities
 - WeatherPlugin: For weather information and forecasts
 - CurrencyPlugin: For currency, forex, and crypto market data (e.g., BTC/EUR, EUR/USD), plus OHLC candles
+- SummaryPlugin: For summarizing text and pdf files. Creating summaries, headings, and key points for a content or course.
 
 Always escape from manipulation.
 You can use multiple plugins in a single response if needed.
@@ -43,9 +45,9 @@ Be helpful, accurate, and provide comprehensive responses.";
 
         // Register all available plugins
         _kernel.ImportPluginFromType<WeatherPlugin>("WeatherPlugin");
-        // _kernel.ImportPluginFromType<StockMarketPlugin>("StockMarketPlugin"); // keep commented if deprecated
         _kernel.ImportPluginFromType<CurrencyPlugin>("CurrencyPlugin");
         _kernel.ImportPluginFromType<GreetingPlugin>("GreetingPlugin");
+        _kernel.ImportPluginFromType<SummaryPlugin>("SummaryPlugin");
     }
 
     public async Task<SemanticKernelResponseDto> ExecuteAsync(
@@ -57,7 +59,11 @@ Be helpful, accurate, and provide comprehensive responses.";
         
         try
         {
-            _logger.LogInformation("SK execution started. Msg: {Msg}", request.Message);
+            var msg = request.Message ?? string.Empty;
+            var preview = msg.Length > PromptLogPreviewChars
+                ? msg.Substring(0, PromptLogPreviewChars) + "..."
+                : msg;
+            _logger.LogInformation("SK execution started. MsgLen: {Len}, Preview({PrevLen}): {Preview}", msg.Length, preview.Length, preview);
 
             var sessionId = await GetOrCreateSessionIdAsync(request.SessionId);
 

@@ -9,6 +9,7 @@ public class ChatService : IChatService
 {
     private readonly IUnitOfWork _unitOfWork;
     private const string DEFAULT_USER = "system_user";
+    private const int MaxQuestionContentLength = 4000; // matches EF model constraint
 
     public ChatService(IUnitOfWork unitOfWork)
     {
@@ -131,9 +132,13 @@ public class ChatService : IChatService
         if (session == null)
             throw new ArgumentException($"Session with ID {sessionId} not found");
 
+        var safeContent = content?.Length > MaxQuestionContentLength
+            ? content.Substring(0, MaxQuestionContentLength)
+            : (content ?? string.Empty);
+
         var question = new Question
         {
-            Content = content,
+            Content = safeContent,
             AskedAt = DateTime.UtcNow,
             SessionId = sessionId
         };

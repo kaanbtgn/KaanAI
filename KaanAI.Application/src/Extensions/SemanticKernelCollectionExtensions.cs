@@ -41,6 +41,7 @@ public static class SemanticKernelCollectionExtensions
         services.AddScoped<WeatherPlugin>();
         services.AddScoped<GreetingPlugin>();
         services.AddScoped<CurrencyPlugin>();
+        services.AddScoped<SummaryPlugin>();
 
         // Note: SemanticKernelService should be automatically registered by AddApplicationServices()
         // since it implements ISemanticKernelService which extends IService
