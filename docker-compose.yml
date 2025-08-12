@@ -1,0 +1,19 @@
+services:
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: KaanAI.API/Dockerfile
+    container_name: kaanai-backend
+    ports:
+      - "5083:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    networks:
+      - kaanai-network
+    restart: unless-stopped
+
+networks:
+  kaanai-network:
+    driver: bridge
