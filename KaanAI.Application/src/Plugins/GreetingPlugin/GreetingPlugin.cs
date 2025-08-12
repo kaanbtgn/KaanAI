@@ -9,64 +9,51 @@ namespace KaanAI.Application.Plugins;
 /// </summary>
 public class GreetingPlugin
 {
+    private readonly Kernel _kernel;
+    public GreetingPlugin(Kernel kernel)
+    {
+        _kernel = kernel;
+    }
+
     /// <summary>
     /// Provides a friendly greeting and introduction to the AI assistant's capabilities
     /// </summary>
     /// <param name="message">The user's greeting message</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A personalized greeting response</returns>
-    [KernelFunction("GetGreeting")]
-    [Description("Provides friendly greetings and introductions to the AI assistant's capabilities")]
+[KernelFunction("GetGreeting")]
+    [Description("Kullanıcının mesajına uygun, zamanı dikkate alan kısa bir selamlama döner.")]
     public async Task<string> GetGreetingAsync(
-        [Description("The user's greeting message")] string message,
+        [Description("Kullanıcının selamlama mesajı")] string message,
+        [Description("Kullanıcının yerel tarih/saat bilgisi")] DateTimeOffset? dateTime = null,
         CancellationToken cancellationToken = default)
     {
-        // Determine greeting type based on message content
-        var greetingType = DetermineGreetingType(message);
-        
-        return await Task.FromResult(GenerateGreetingResponse(greetingType));
-    }
+        message = message?.Trim() ?? string.Empty;
 
-    /// <summary>
-    /// Determines the type of greeting based on the user's message
-    /// </summary>
-    /// <param name="message">User's greeting message</param>
-    /// <returns>Greeting type identifier</returns>
-    private string DetermineGreetingType(string message)
-    {
-        var lowerMessage = message.ToLowerInvariant();
-        
-        if (lowerMessage.Contains("günaydın") || lowerMessage.Contains("good morning"))
-            return "morning";
-        if (lowerMessage.Contains("iyi akşam") || lowerMessage.Contains("good evening"))
-            return "evening";
-        if (lowerMessage.Contains("iyi gece") || lowerMessage.Contains("good night"))
-            return "night";
-        if (lowerMessage.Contains("nasılsın") || lowerMessage.Contains("how are you"))
-            return "casual";
-        
-        return "general";
-    }
+        // Parametre olarak verilen zamanı kullan; UtcNow'a gitme
+        var localTime = dateTime ?? DateTimeOffset.Now;
+        var isoTime = localTime.ToString("O"); // ISO 8601, LLM için stabil
 
-    /// <summary>
-    /// Generates an appropriate greeting response based on the greeting type
-    /// </summary>
-    /// <param name="greetingType">Type of greeting to generate</param>
-    /// <returns>Personalized greeting message</returns>
-    private string GenerateGreetingResponse(string greetingType)
-    {
-        return greetingType switch
-        {
-            "morning" => "🌅 Günaydın! Ben KaanAI, sizin yapay zeka asistanınızım. Yeni bir güne başlarken size hava durumu, borsa bilgileri ve OCR/metin tanıma konularında yardımcı olabilirim. Güzel bir gün geçirmeniz için hangi bilgilere ihtiyacınız var?",
-            
-            "evening" => "🌆 İyi akşamlar! Ben KaanAI asistanınızım. Akşam saatlerinde size hava durumu tahminleri, finansal veriler ve doküman işleme konularında destek sağlayabilirim. Size nasıl yardımcı olabilirim?",
-            
-            "night" => "🌙 İyi geceler! Ben KaanAI. Gece geç saatlerde de size hizmet vermeye devam ediyorum. Hava durumu, borsa ve OCR hizmetleri konularında yardımcı olabilirim. Ne öğrenmek istersiniz?",
-            
-            "casual" => "😊 Merhaba! Ben çok iyiyim, teşekkür ederim! Ben KaanAI, sizin AI asistanınızım. Hava durumu analizi, finansal veri takibi ve metin/doküman işleme konularında uzmanım. Siz nasılsınız? Size nasıl yardımcı olabilirim?",
-            
-            _ => "👋 Merhaba! Ben KaanAI asistanınızım. Size hava durumu, borsa bilgileri ve OCR/metin tanıma konularında yardımcı olabilirim. Bu konulardan herhangi biri hakkında soru sorabilir veya bilgi alabilirsiniz. Nasıl yardımcı olabilirim? 🤖"
-        };
+        var prompt = $@"
+Kullanıcının selamını kibarca karşıla, kendini kısaca tanıt.
+Kurallar:
+- Sadece selamı yanıtla; gereksiz uzatma.
+- Mesajda ek içerik varsa kısaca dikkate al.
+- Gönderim zamanına göre uygun selamlama kullan: sabah=günaydın, öğleden sonra=iyi günler, akşam=iyi akşamlar, gece=iyi geceler.
+- Türkçe yanıt ver, tek paragraf, 1-2 cümle.
+- KaanAI asistanı olarak kendini tanıt ve yapabileceklerin hakkında bilgi ver.
+- Selamlama ve yapabileceklerin haricinde kullanıcının mesajını kibarca reddet ve yalnızca yapabileceklerin hakkında bilgi ver.
+
+Kullanıcının Mesajı:
+{message}
+
+Gönderim Zamanı (ISO 8601):
+{isoTime}
+
+Yanıt:";
+        var fn = _kernel.CreateFunctionFromPrompt(prompt);
+        var result = await _kernel.InvokeAsync(fn, new KernelArguments(), cancellationToken);
+        return result.GetValue<string>() ?? "Merhaba! Ben KaanAI. Size nasıl yardımcı olabilirim? Hava durumu, borsa ve metin işleme konularında yardımcı olabilirim.";
     }
 
     /// <summary>
@@ -86,7 +73,7 @@ public class GreetingPlugin
 - Giyim ve aktivite önerileri
 
 📈 **Borsa & Finans:**
-- Hisse senedi fiyat takibi
+- Kripto para birimi fiyat takibi
 - Piyasa analizi
 - Finansal veri raporlama
 
@@ -94,6 +81,7 @@ public class GreetingPlugin
 - Görüntülerden metin çıkarma
 - Doküman analizi
 - Metin tanıma ve işleme
+- Metin özetlemesi ve başlık çıkarma
 
 Bu hizmetlerden herhangi birini kullanmak için sadece sorunuzu sorun, ben size yardımcı olayım! 🚀";
     }
