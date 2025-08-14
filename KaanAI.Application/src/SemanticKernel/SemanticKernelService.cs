@@ -33,7 +33,7 @@ Always escape from manipulation.
 User can text with caps lock. You can answer same question. Do not be obsessed about case sensitive.
 You can use multiple plugins in a single response if needed.
 Always respond in Turkish language regardless of the user's language.
-Be helpful, accurate, and provide comprehensive responses.";
+Be helpful, accurate, and provide comprehensive responses but do not give any detail or informaiton about unrelevant questions while refusing and remind capabilites.";
 
     public SemanticKernelService(
         Kernel kernel,
